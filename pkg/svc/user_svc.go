@@ -3,12 +3,12 @@ package svc
 import (
 	"context"
 
-	"github.com/infobloxopen/atlas-app-toolkit/errors"
+	"errors"
+
 	charminder "github.com/kutty-kumar/charminder/pkg"
-	"github.com/kutty-kumar/ho_oh/user_service_v1"
-	"github.com/kutty-kumar/user_service/pkg/domain/entity"
-	"github.com/kutty-kumar/user_service/pkg/repo"
-	"google.golang.org/grpc/codes"
+	"github.com/kutty-kumar/ho_oh/snorlax_v1"
+	"github.com/kutty-kumar/snorlax/pkg/domain/entity"
+	"github.com/kutty-kumar/snorlax/pkg/repo"
 )
 
 type UserSvc struct {
@@ -22,50 +22,50 @@ func NewUserSvc(userRepo repo.UserRepo) UserSvc {
 	return userSvc
 }
 
-func (us *UserSvc) CreateUser(ctx context.Context, in *user_service_v1.CreateUserRequest) (*user_service_v1.UserOperationResponse, error) {
-	var resp user_service_v1.UserOperationResponse
+func (us *UserSvc) CreateUser(ctx context.Context, in *snorlax_v1.CreateUserRequest) (*snorlax_v1.UserOperationResponse, error) {
+	var resp snorlax_v1.UserOperationResponse
 	var user entity.User
 	user.FillProperties(*in.Payload)
 	err, createdUser := us.Create(ctx, &user)
 	if err != nil {
-		return nil, errors.New(ctx, codes.Internal, "error in creating user")
+		return nil, errors.New("error in creating user")
 	}
-	responseDto := createdUser.ToDto().(user_service_v1.UserDto)
+	responseDto := createdUser.ToDto().(snorlax_v1.UserDto)
 	resp.Response = &responseDto
 	return &resp, nil
 }
 
-func (us *UserSvc) UpdateUser(ctx context.Context, in *user_service_v1.UpdateUserRequest) (*user_service_v1.UserOperationResponse, error) {
-	var resp user_service_v1.UserOperationResponse
+func (us *UserSvc) UpdateUser(ctx context.Context, in *snorlax_v1.UpdateUserRequest) (*snorlax_v1.UserOperationResponse, error) {
+	var resp snorlax_v1.UserOperationResponse
 	var user entity.User
 	user.FillProperties(*in.Payload)
 	err, updatedUser := us.Update(ctx, in.UserId, &user)
 	if err != nil {
-		return nil, errors.New(ctx, codes.Internal, "error in updating user")
+		return nil, errors.New("error in updating user")
 	}
-	responseDto := updatedUser.ToDto().(user_service_v1.UserDto)
+	responseDto := updatedUser.ToDto().(snorlax_v1.UserDto)
 	resp.Response = &responseDto
 	return &resp, nil
 }
 
-func (us *UserSvc) GetUserByExternalId(ctx context.Context, in *user_service_v1.GetUserByExternalIdRequest) (*user_service_v1.UserOperationResponse, error) {
-	var resp user_service_v1.UserOperationResponse
+func (us *UserSvc) GetUserByExternalId(ctx context.Context, in *snorlax_v1.GetUserByExternalIdRequest) (*snorlax_v1.UserOperationResponse, error) {
+	var resp snorlax_v1.UserOperationResponse
 	err, user := us.FindByExternalId(ctx, in.UserId)
 	if err != nil {
-		return nil, errors.New(ctx, codes.NotFound, "user not found")
+		return nil, errors.New("user not found")
 	}
-	responseDto := user.ToDto().(user_service_v1.UserDto)
+	responseDto := user.ToDto().(snorlax_v1.UserDto)
 	resp.Response = &responseDto
 	return &resp, nil
 }
 
-func (us *UserSvc) GetUserByEmailAndPassword(ctx context.Context, in *user_service_v1.GetUserByEmailAndPasswordRequest) (*user_service_v1.UserOperationResponse, error) {
-	var resp user_service_v1.UserOperationResponse
+func (us *UserSvc) GetUserByEmailAndPassword(ctx context.Context, in *snorlax_v1.GetUserByEmailAndPasswordRequest) (*snorlax_v1.UserOperationResponse, error) {
+	var resp snorlax_v1.UserOperationResponse
 	err, user := us.userRepo.GetUserByEmailPassword(ctx, in.Email, in.Password)
 	if err != nil {
-		return nil, errors.New(ctx, codes.NotFound, "user not found")
+		return nil, errors.New("user not found")
 	}
-	responseDto := user.ToDto().(user_service_v1.UserDto)
+	responseDto := user.ToDto().(snorlax_v1.UserDto)
 	resp.Response = &responseDto
 	return &resp, nil
 }

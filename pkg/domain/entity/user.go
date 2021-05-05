@@ -11,7 +11,7 @@ import (
 	"github.com/kutty-kumar/charminder/pkg"
 	charminder "github.com/kutty-kumar/charminder/pkg"
 	"github.com/kutty-kumar/ho_oh/core_v1"
-	"github.com/kutty-kumar/ho_oh/user_service_v1"
+	"github.com/kutty-kumar/ho_oh/snorlax_v1"
 )
 
 type User struct {
@@ -20,8 +20,8 @@ type User struct {
 	LastName    string
 	DateOfBirth time.Time
 	Gender      core_v1.Gender
-	Email       string
-	Password    string
+	Email       string `gorm:"unique,index:credential_idx"`
+	Password    string `gorm:"index:credential_idx"`
 }
 
 func (r *User) ToJson() (string, error) {
@@ -57,7 +57,7 @@ func (r *User) GetName() pkg.DomainName {
 }
 
 func (r *User) ToDto() interface{} {
-	return user_service_v1.UserDto{
+	return snorlax_v1.UserDto{
 		FirstName:   r.FirstName,
 		LastName:    r.LastName,
 		DateOfBirth: r.DateOfBirth.Format("2006-01-02"),
@@ -69,7 +69,7 @@ func (r *User) ToDto() interface{} {
 }
 
 func (r *User) FillProperties(dto interface{}) charminder.Base {
-	userDto := dto.(user_service_v1.UserDto)
+	userDto := dto.(snorlax_v1.UserDto)
 	r.FirstName = userDto.FirstName
 	r.LastName = userDto.LastName
 	// err here is ignored as correctness is guaranteed

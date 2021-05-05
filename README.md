@@ -1,4 +1,4 @@
-# user_service
+# snorlax
 
 _This generated README.md file loosely follows a [popular template](https://gist.github.com/PurpleBooth/109311bb0361f32d87a2)._
 
@@ -34,8 +34,6 @@ until finished
 
 End with an example of getting some data out of the system or using it for a little demo.
 
-
-
 ## Deployment
 
 Add additional notes about how to deploy this application. Maybe list some common pitfalls or debugging strategies.
@@ -50,4 +48,4 @@ Give an example
 
 ## Versioning
 
-We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/kutty-kumar/user_service/tags).
+We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/kutty-kumar/snorlax/tags).

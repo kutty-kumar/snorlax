@@ -13,10 +13,10 @@ import (
 	"github.com/infobloxopen/atlas-app-toolkit/requestid"
 	"github.com/kutty-kumar/charminder/pkg"
 	charminder "github.com/kutty-kumar/charminder/pkg"
-	"github.com/kutty-kumar/ho_oh/user_service_v1"
-	"github.com/kutty-kumar/user_service/pkg/domain/entity"
-	"github.com/kutty-kumar/user_service/pkg/repo"
-	"github.com/kutty-kumar/user_service/pkg/svc"
+	"github.com/kutty-kumar/ho_oh/snorlax_v1"
+	"github.com/kutty-kumar/snorlax/pkg/domain/entity"
+	"github.com/kutty-kumar/snorlax/pkg/repo"
+	"github.com/kutty-kumar/snorlax/pkg/svc"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"google.golang.org/grpc"
@@ -83,9 +83,9 @@ func NewGRPCServer(logger *logrus.Logger, dbConnectionString string) (*grpc.Serv
 	}
 	setterOption := pkg.WithExternalIdSetter(externalIdSetter)
 	userGormDao := charminder.NewBaseGORMDao(dbOption, charminder.WithCreator(domainFactory.GetMapping("user")), setterOption)
-	userGormRepo := repo.NewUserGORMRepo(userGormDao)
-	userSvc := svc.NewUserSvc(&userGormRepo)
-	user_service_v1.RegisterUserServiceServer(grpcServer, &userSvc)
+	userRepoGormImpl := repo.NewUserRepoGormImpl(userGormDao)
+	userSvc := svc.NewUserSvc(&userRepoGormImpl)
+	snorlax_v1.RegisterUserServiceServer(grpcServer, &userSvc)
 
 	return grpcServer, nil
 }

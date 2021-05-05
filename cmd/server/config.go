@@ -6,7 +6,7 @@ const (
 	defaultConfigDirectory = "../../deploy/"
 	defaultConfigFile      = "config"
 	defaultSecretFile      = ""
-	defaultApplicationID   = "user_service"
+	defaultApplicationID   = "snorlax"
 
 	// Heartbeat
 	defaultKeepaliveTime    = 10
