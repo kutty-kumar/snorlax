@@ -1,6 +1,8 @@
 package main
 
 import (
+	"log"
+	"os"
 	"time"
 
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
@@ -9,13 +11,19 @@ import (
 	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
 	"github.com/infobloxopen/atlas-app-toolkit/gateway"
 	"github.com/infobloxopen/atlas-app-toolkit/requestid"
-	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/postgres"
+	"github.com/kutty-kumar/charminder/pkg"
+	charminder "github.com/kutty-kumar/charminder/pkg"
+	"github.com/kutty-kumar/ho_oh/user_service_v1"
+	"github.com/kutty-kumar/user_service/pkg/domain/entity"
+	"github.com/kutty-kumar/user_service/pkg/repo"
+	"github.com/kutty-kumar/user_service/pkg/svc"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/keepalive"
-	"google.golang.org/grpc/reflection"
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
+	gLogger "gorm.io/gorm/logger"
 )
 
 func NewGRPCServer(logger *logrus.Logger, dbConnectionString string) (*grpc.Server, error) {
@@ -46,15 +54,45 @@ func NewGRPCServer(logger *logrus.Logger, dbConnectionString string) (*grpc.Serv
 		),
 	)
 
-	// create new postgres database
-	_, err := gorm.Open("postgres", dbConnectionString)
+	dbLogger := gLogger.New(
+		log.New(os.Stdout, "\r\n", log.LstdFlags), // io writer
+		gLogger.Config{
+			SlowThreshold:             time.Second,  // Slow SQL threshold
+			LogLevel:                  gLogger.Info, // Log level
+			IgnoreRecordNotFoundError: true,         // Ignore ErrRecordNotFound error for logger
+			Colorful:                  false,        // Disable color
+		},
+	)
+
+	// register database
+	db, err := gorm.Open(mysql.Open(dbConnectionString), &gorm.Config{Logger: dbLogger})
 	if err != nil {
 		return nil, err
 	}
-	// register service implementation with the grpcServer
+	createTables(db)
 
-	// Register reflection service on gRPC server.
-	reflection.Register(grpcServer)
+	// register service implementation with the grpcServer
+	domainFactory := charminder.NewDomainFactory()
+	domainFactory.RegisterMapping("user", func() charminder.Base {
+		return &entity.User{}
+	})
+	dbOption := charminder.WithDb(db)
+	externalIdSetter := func(externalId string, base pkg.Base) pkg.Base {
+		base.SetExternalId(externalId)
+		return base
+	}
+	setterOption := pkg.WithExternalIdSetter(externalIdSetter)
+	userGormDao := charminder.NewBaseGORMDao(dbOption, charminder.WithCreator(domainFactory.GetMapping("user")), setterOption)
+	userGormRepo := repo.NewUserGORMRepo(userGormDao)
+	userSvc := svc.NewUserSvc(&userGormRepo)
+	user_service_v1.RegisterUserServiceServer(grpcServer, &userSvc)
 
 	return grpcServer, nil
+}
+
+func createTables(db *gorm.DB) {
+	err := db.AutoMigrate(entity.User{})
+	if err != nil {
+		log.Fatalf("An error %v occurred while auto-migrating", err)
+	}
 }

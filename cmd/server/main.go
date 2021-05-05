@@ -13,6 +13,7 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/infobloxopen/atlas-app-toolkit/gateway"
 	"github.com/infobloxopen/atlas-app-toolkit/gorm/resource"
+	"github.com/infobloxopen/atlas-app-toolkit/requestid"
 	"github.com/infobloxopen/atlas-app-toolkit/server"
 	"github.com/kutty-kumar/ho_oh/user_service_v1"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -89,16 +90,16 @@ func ServeExternal(logger *logrus.Logger) error {
 		logger.Fatalln(err)
 	}
 	grpc_prometheus.Register(grpcServer)
-
 	s, err := server.NewServer(
 		server.WithGrpcServer(grpcServer),
 		server.WithGateway(
 			gateway.WithGatewayOptions(
 				runtime.WithForwardResponseOption(forwardResponseOption),
-				runtime.WithIncomingHeaderMatcher(gateway.AtlasDefaultHeaderMatcher()),
+				runtime.WithIncomingHeaderMatcher(gateway.ExtendedDefaultHeaderMatcher(
+					requestid.DefaultRequestIDKey)),
 			),
 			gateway.WithServerAddress(fmt.Sprintf("%s:%s", viper.GetString("server.address"), viper.GetString("server.port"))),
-			gateway.WithEndpointRegistration(viper.GetString("server_config.gateway_url"), user_service_v1.RegisterUserServiceHandlerFromEndpoint),
+			gateway.WithEndpointRegistration(viper.GetString("gateway.endpoint"), user_service_v1.RegisterUserServiceHandlerFromEndpoint),
 		),
 		server.WithHandler("/swagger/", NewSwaggerHandler(viper.GetString("gateway.swaggerFile"))),
 	)
